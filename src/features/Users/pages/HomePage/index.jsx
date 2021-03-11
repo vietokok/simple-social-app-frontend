@@ -15,7 +15,7 @@ import {
 	updatePost,
 } from 'features/Posts/postSlice';
 import FriendList from 'features/Users/components/FriendList';
-import { getAllUser, getUserById } from 'features/Users/userSlice';
+import { getUserById } from 'features/Users/userSlice';
 import React, { useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import WebSocketProvider from 'utils/socketConfig';

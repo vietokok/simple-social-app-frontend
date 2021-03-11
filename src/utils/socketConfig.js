@@ -1,6 +1,6 @@
 import React, { createContext } from 'react';
 import io from 'socket.io-client';
-import { getLocalStorage } from 'utils';
+import { getCookie } from 'utils';
 
 const WebSocketContext = createContext(null);
 
@@ -10,8 +10,8 @@ let socket;
 
 export default ({ children }) => {
 	if (!socket) {
-		socket = io('http://127.0.0.1:4000', {
-			query: `token=${getLocalStorage().token}`,
+		socket = io('http://localhost:4000', {
+			withCredentials: true,
 		});
 	}
 

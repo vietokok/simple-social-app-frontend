@@ -1,7 +1,6 @@
 import { Box, Grid, makeStyles, Paper, Typography } from '@material-ui/core';
-import React, { useEffect, useRef } from 'react';
-
-MessageList.propTypes = {};
+import React from 'react';
+import { getCookie } from 'utils';
 
 const useStyles = makeStyles((theme) => ({
 	chatSeft: {
@@ -9,27 +8,16 @@ const useStyles = makeStyles((theme) => ({
 	},
 }));
 
-const getLocalStorage = () => {
-	return JSON.parse(localStorage.getItem('userData'));
-};
-
 function MessageList(props) {
 	const { messages } = props;
+	const userId = getCookie('c_user');
 
 	const classes = useStyles();
-
-	const messagesEndRef = useRef(null);
-
-	const scrollToBottom = () => {
-		messagesEndRef.current.scrollIntoView();
-	};
-
-	useEffect(scrollToBottom, [messages]);
 
 	return (
 		<Box style={{ width: '100%' }}>
 			{messages.map((message, index) =>
-				message.from._id === getLocalStorage().userId ? (
+				message.from._id === userId ? (
 					<Grid key={index} container style={{ padding: '0.75rem' }}>
 						<Grid item xs={4} md={4} lg={4}></Grid>
 						<Grid item xs={8} md={8} lg={8}>
@@ -60,8 +48,6 @@ function MessageList(props) {
 					</Grid>
 				)
 			)}
-
-			<Box ref={messagesEndRef} />
 		</Box>
 	);
 }

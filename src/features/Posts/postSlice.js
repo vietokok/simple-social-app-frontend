@@ -2,8 +2,12 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import postApi from 'api/postApi';
 
 export const getAllPost = createAsyncThunk('/post/getAllPost', async () => {
-	const response = await postApi.getAllPost();
-	return response.posts;
+	try {
+		const response = await postApi.getAllPost();
+		return response.posts;
+	} catch (error) {
+		console.log(error);
+	}
 });
 
 export const getPostByMe = createAsyncThunk('/post/getPostByMe', async () => {

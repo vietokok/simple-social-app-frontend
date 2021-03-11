@@ -1,5 +1,3 @@
-import React from 'react';
-import PropTypes from 'prop-types';
 import {
 	Avatar,
 	Box,
@@ -7,14 +5,11 @@ import {
 	Grid,
 	makeStyles,
 	Paper,
+	Typography,
 } from '@material-ui/core';
+import React from 'react';
+import { getCookie } from 'utils';
 import MoreActionMenu from '../MoreActionMenu';
-
-PostList.propTypes = {};
-
-const getLocalStorage = () => {
-	return JSON.parse(localStorage.getItem('userData'));
-};
 
 const useStyles = makeStyles((theme) => ({
 	paper: {
@@ -26,14 +21,16 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function PostList(props) {
+	const { postData, postLoading, handleEditPost, handleDeletePost } = props;
+	const userId = getCookie('c_user');
+
 	const classes = useStyles();
 
-	const local = getLocalStorage();
-
-	const userId = local.userId;
-	const { postData, postLoading, handleEditPost, handleDeletePost } = props;
-
-	return !postLoading && postData.length > 0 ? (
+	return postLoading ? (
+		<Grid container justify='center' item xs={12} md={12} lg={12}>
+			<CircularProgress />
+		</Grid>
+	) : postData.length > 0 ? (
 		postData.map((post, index) => (
 			<Grid key={index} item xs={12} md={12} lg={12}>
 				<Paper className={classes.paper}>
@@ -65,8 +62,8 @@ function PostList(props) {
 			</Grid>
 		))
 	) : (
-		<Grid container justify='center' item xs={12} md={12} lg={12}>
-			<CircularProgress />
+		<Grid item xs={12} md={12} lg={12} style={{ textAlign: 'center' }}>
+			<Typography variant='h6'>No post found</Typography>
 		</Grid>
 	);
 }

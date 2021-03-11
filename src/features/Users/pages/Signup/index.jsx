@@ -104,7 +104,7 @@ export default function SignUp() {
 							handleOpenSnackBar(response.data.message);
 							setTimeout(() => {
 								history.push('/signin');
-							}, 3500);
+							}, 2000);
 						}
 					} catch (err) {
 						const error = err.response;

@@ -1,40 +1,32 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import messageApi from 'api/messageApi';
-
-export const getMessageByRoom = createAsyncThunk(
-	'/message/getMessageByRoom',
-	async (params) => {
-		const response = await messageApi.getMessageByRoom(params);
-		return response.messages;
-	}
-);
+import { createSlice } from '@reduxjs/toolkit';
 
 const messageSlice = createSlice({
-	name: 'posts',
+	name: 'messages',
 	initialState: {
-		messageList: [],
+		messageList: {},
 		loading: false,
 		error: '',
 	},
 	reducers: {
+		addNewBoxChat: (state, action) => {
+			if (!state.messageList.hasOwnProperty(action.payload)) {
+				state.messageList[action.payload] = [];
+			}
+		},
+
+		getMessageByFriend: (state, action) => {
+			const messages = action.payload.msg.concat(
+				state.messageList[action.payload.friend]
+			);
+			state.messageList[action.payload.friend] = messages;
+		},
+
 		addNewMessage: (state, action) => {
-			state.messageList.push(action.payload);
-		},
-	},
-	extraReducers: {
-		[getMessageByRoom.pending]: (state) => {
-			state.loading = true;
-		},
-		[getMessageByRoom.rejected]: (state, action) => {
-			state.error = action.error;
-		},
-		[getMessageByRoom.fulfilled]: (state, action) => {
-			state.loading = false;
-			state.messageList = action.payload;
+			state.messageList[action.payload.friend].push(action.payload.msg);
 		},
 	},
 });
 
 const { reducer: messageReducer, actions } = messageSlice;
-export const { addNewMessage } = actions;
+export const { addNewMessage, getMessageByFriend, addNewBoxChat } = actions;
 export default messageReducer;

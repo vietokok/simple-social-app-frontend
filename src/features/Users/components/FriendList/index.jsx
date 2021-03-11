@@ -1,14 +1,15 @@
-import { Avatar, Box, Grid, Paper } from '@material-ui/core';
+import {
+	Avatar,
+	Box,
+	CircularProgress,
+	Grid,
+	Paper,
+	Typography,
+} from '@material-ui/core';
 import Badge from '@material-ui/core/Badge';
-import Button from '@material-ui/core/Button';
-import Dialog from '@material-ui/core/Dialog';
-import DialogActions from '@material-ui/core/DialogActions';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import MessageBox from 'features/Messages/components/MessageBox';
-import { addNewMessage } from 'features/Messages/messageSlice';
+import { addNewBoxChat, addNewMessage } from 'features/Messages/messageSlice';
 import { getAllUser } from 'features/Users/userSlice';
 import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
@@ -41,32 +42,11 @@ const useStyles = makeStyles((theme) => ({
 	},
 }));
 
-const getLocalStorage = () => {
-	return JSON.parse(localStorage.getItem('userData'));
-};
-
 function FriendList(props) {
 	const socket = useContext(WebSocketContext);
 	const dispatch = useDispatch();
 	const friends = useSelector((state) => state.users.friendList);
-
-	const [videoInfo, setVideoInfo] = useState({});
-
-	const [open, setOpen] = React.useState(false);
-
-	const handleClose = () => {
-		setOpen(false);
-		// window.open(
-		// 	'http://localhost:3000/videocall',
-		// 	'_blank',
-		// 	'toolbar=yes,scrollbars=yes,resizable=no,top=30,left=110,width=1300,height=700'
-		// );
-		window.open(
-			`http://localhost:3000/videocall?from=${getLocalStorage().userId}&to=${
-				videoInfo.from
-			}`
-		);
-	};
+	const messages = useSelector((state) => state.messages.messageList);
 
 	useEffect(() => {
 		const getFriends = async () => {
@@ -77,98 +57,58 @@ function FriendList(props) {
 		getFriends();
 	}, []);
 
-	useEffect(() => {
-		const myInterVal = setInterval(() => {
-			const getFriends = async () => {
-				try {
-					await dispatch(getAllUser());
-				} catch (error) {}
-			};
-			getFriends();
-		}, 20000);
+	// useEffect(() => {
+	// 	const myInterVal = setInterval(() => {
+	// 		const getFriends = async () => {
+	// 			try {
+	// 				await dispatch(getAllUser());
+	// 			} catch (error) {}
+	// 		};
+	// 		getFriends();
+	// 	}, 20000);
 
-		return () => {
-			clearInterval(myInterVal);
-		};
-	}, []);
+	// 	return () => {
+	// 		clearInterval(myInterVal);
+	// 	};
+	// }, []);
 
-	const [openChatbox, setOpenChatbox] = useState(() => {
-		return {
-			open: false,
-			friend: '',
-		};
+	const [openChatbox, setOpenChatbox] = useState({
+		open: false,
+		friend: {},
 	});
 
 	const handleOpenChatbox = (friend) => {
-		if (openChatbox.open !== true) {
-			setOpenChatbox({
-				open: true,
-				friend,
-			});
-		}
+		dispatch(addNewBoxChat(friend._id));
+		setOpenChatbox({ ...openChatbox, open: true, friend });
 	};
 
 	const handleCloseChatbox = () => {
-		setOpenChatbox({
-			open: false,
-			friend: '',
-		});
+		setOpenChatbox({ ...openChatbox, open: false, friend: {} });
 	};
 
 	useEffect(() => {
-		socket.on('privateMessageResponse', (msg) => {
-			if (getLocalStorage().userId !== msg.from._id) {
+		socket.on('check', (msg) => {
+			if (openChatbox.open !== true) {
 				handleOpenChatbox(msg.from);
 			}
-			dispatch(addNewMessage(msg));
-		});
-
-		socket.on('makeVideoResponse', (videoInfo) => {
-			setVideoInfo(videoInfo);
-			setOpen(true);
 		});
 	}, []);
 
-	const sendMessage = (message) => {
-		socket.emit('privateMessage', message);
-	};
-
-	const makeVideoCall = (info) => {
-		socket.emit('makeVideo', info);
+	const sendMessage = (messageObject) => {
+		socket.emit('privateMessage', messageObject);
 	};
 
 	const classes = useStyles();
 
 	return (
 		<Grid item xs={12} md={12} lg={12}>
-			<Dialog
-				open={open}
-				onClose={handleClose}
-				aria-labelledby='alert-dialog-title'
-				aria-describedby='alert-dialog-description'
-			>
-				<DialogTitle id='alert-dialog-title'>{'Video Call'}</DialogTitle>
-				<DialogContent>
-					<DialogContentText id='alert-dialog-description'>
-						{videoInfo.from} calling !!!!
-					</DialogContentText>
-				</DialogContent>
-				<DialogActions>
-					<Button onClick={handleClose} color='primary'>
-						Disagree
-					</Button>
-					<Button onClick={handleClose} color='primary' autoFocus>
-						Agree
-					</Button>
-				</DialogActions>
-			</Dialog>
 			{/* chatbox */}
 			{openChatbox.open && (
 				<MessageBox
+					sendMessage={sendMessage}
+					check={openChatbox.open}
 					friend={openChatbox.friend}
 					handleCloseChatbox={handleCloseChatbox}
-					sendMessage={sendMessage}
-					makeVideoCall={makeVideoCall}
 				/>
 			)}
 			<Paper className={classes.paper}>
@@ -178,8 +118,11 @@ function FriendList(props) {
 							Friends
 						</Box>
 					</Grid>
-					{friends &&
-						friends.length > 0 &&
+					{friends.loading ? (
+						<Grid container justify='center' item xs={12} md={12} lg={12}>
+							<CircularProgress />
+						</Grid>
+					) : friends.length > 0 ? (
 						friends.map((friend, index) => (
 							<Grid
 								key={index}
@@ -208,7 +151,12 @@ function FriendList(props) {
 									<Box>{friend.displayName}</Box>
 								</Grid>
 							</Grid>
-						))}
+						))
+					) : (
+						<Grid item xs={12} md={12} lg={12} style={{ textAlign: 'center' }}>
+							<Typography variant='h6'>No friend found</Typography>
+						</Grid>
+					)}
 				</Grid>
 			</Paper>
 		</Grid>

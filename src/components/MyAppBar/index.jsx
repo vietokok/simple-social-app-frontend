@@ -1,8 +1,3 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import ExitToAppIcon from '@material-ui/icons/ExitToApp';
-import PhotoCameraIcon from '@material-ui/icons/PhotoCamera';
-import FaceIcon from '@material-ui/icons/Face';
 import {
 	AppBar,
 	Avatar,
@@ -15,9 +10,13 @@ import {
 	Toolbar,
 	Typography,
 } from '@material-ui/core';
+import FaceIcon from '@material-ui/icons/Face';
+import PhotoCameraIcon from '@material-ui/icons/PhotoCamera';
+import ExitToAppIcon from '@material-ui/icons/ExitToApp';
+import React from 'react';
 import { useHistory } from 'react-router-dom';
-import axios from 'axios';
 import { isEmpty } from 'utils';
+import axios from 'axios';
 
 MyAppBar.propTypes = {};
 
@@ -42,9 +41,13 @@ export default function MyAppBar(props) {
 	};
 
 	const logout = () => {
-		localStorage.clear();
 		const handleLogout = async () => {
-			await axios.get('http://localhost:4000/auth/logout');
+			const respose = await axios.get('http://localhost:4000/auth/logout', {
+				withCredentials: true,
+			});
+			if (respose.status === 200) {
+				history.push('/signin');
+			}
 		};
 		handleLogout();
 	};

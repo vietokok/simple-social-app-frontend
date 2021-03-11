@@ -1,10 +1,9 @@
-import { Box } from '@material-ui/core';
+import { Box, Snackbar } from '@material-ui/core';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import Container from '@material-ui/core/Container';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import Grid from '@material-ui/core/Grid';
-import Snackbar from '@material-ui/core/Snackbar';
 import { makeStyles } from '@material-ui/core/styles';
 import Typography from '@material-ui/core/Typography';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
@@ -13,9 +12,8 @@ import GoogleIcon from 'assets/icons/Google';
 import axios from 'axios';
 import InputField from 'custom-fields/InputField';
 import { FastField, Form, Formik } from 'formik';
-import React, { useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
-import { login } from 'utils';
 import * as Yup from 'yup';
 
 const useStyles = makeStyles((theme) => ({
@@ -42,6 +40,31 @@ export default function SignIn() {
 	const classes = useStyles();
 	let history = useHistory();
 
+	const [snackbar, setSnackbar] = useState(() => {
+		return {
+			open: false,
+			message: '',
+		};
+	});
+
+	const handleClose = (event, reason) => {
+		if (reason === 'clickaway') {
+			return;
+		}
+
+		setSnackbar({
+			open: false,
+			message: '',
+		});
+	};
+
+	const handleOpenSnackBar = (message) => {
+		setSnackbar({
+			open: true,
+			message,
+		});
+	};
+
 	const openGoogleLogin = () => {
 		window.open('http://localhost:4000/auth/google', '_self');
 	};
@@ -49,32 +72,6 @@ export default function SignIn() {
 	const openFacebookLogin = () => {
 		window.open('http://localhost:4000/auth/facebook', '_self');
 	};
-
-	useEffect(() => {
-		fetch('http://localhost:4000/auth/login/success', {
-			method: 'GET',
-			credentials: 'include',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-			},
-		})
-			.then((response) => {
-				if (response.status === 200) {
-					return response.json();
-				}
-				throw new Error('failed to authenticate user');
-			})
-			.then((responseJson) => {
-				const data = JSON.stringify({
-					userId: responseJson.user._id,
-					token: responseJson.token,
-				});
-				login(data);
-				history.push('/');
-			})
-			.catch((error) => {});
-	});
 
 	const initialValues = {
 		email: '',
@@ -92,15 +89,19 @@ export default function SignIn() {
 			validationSchema={validationSchema}
 			onSubmit={(values) => {
 				const login = async () => {
-					const response = await axios.post(
-						'http://localhost:4000/auth/login',
-						values,
-						{
-							withCredentials: true,
+					try {
+						const response = await axios.post(
+							'http://localhost:4000/auth/login',
+							values,
+							{
+								withCredentials: true,
+							}
+						);
+						if (response.status === 200) {
+							history.push('/');
 						}
-					);
-					if (response.status === 201) {
-						location.reload();
+					} catch (error) {
+						handleOpenSnackBar(error.response.data.message);
 					}
 				};
 				login();
@@ -110,6 +111,16 @@ export default function SignIn() {
 				return (
 					<Container component='main' maxWidth='xs'>
 						<CssBaseline />
+						<Snackbar
+							anchorOrigin={{
+								vertical: 'top',
+								horizontal: 'right',
+							}}
+							open={snackbar.open}
+							onClose={handleClose}
+							autoHideDuration={3500}
+							message={snackbar.message}
+						/>
 						<Box className={classes.paper}>
 							<Avatar className={classes.avatar}>
 								<LockOutlinedIcon />

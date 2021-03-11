@@ -1,19 +1,20 @@
-const TOKEN_KEY = 'userData';
-
-export const login = (data) => {
-	localStorage.setItem(TOKEN_KEY, data);
-};
-
-export const logout = () => {
-	localStorage.removeItem(TOKEN_KEY);
-};
-
-export const getLocalStorage = () => {
-	return JSON.parse(localStorage.getItem('userData'));
+export const getCookie = (cname) => {
+	var name = cname + '=';
+	var ca = document.cookie.split(';');
+	for (var i = 0; i < ca.length; i++) {
+		var c = ca[i];
+		while (c.charAt(0) == ' ') {
+			c = c.substring(1);
+		}
+		if (c.indexOf(name) == 0) {
+			return c.substring(name.length, c.length);
+		}
+	}
+	return '';
 };
 
 export const isLogin = () => {
-	if (localStorage.getItem(TOKEN_KEY)) {
+	if (getCookie('c_user') !== '') {
 		return true;
 	}
 

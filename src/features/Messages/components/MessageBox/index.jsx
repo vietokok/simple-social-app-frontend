@@ -12,14 +12,14 @@ import CloseIcon from '@material-ui/icons/Close';
 import ImageIcon from '@material-ui/icons/Image';
 import SendIcon from '@material-ui/icons/Send';
 import VideocamIcon from '@material-ui/icons/Videocam';
-import { getMessageByRoom } from 'features/Messages/messageSlice';
-import React, { useContext, useEffect, useState } from 'react';
+import {
+	addNewMessage,
+	getMessageByFriend,
+} from 'features/Messages/messageSlice';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { WebSocketContext } from 'utils/socketConfig';
 import MessageList from '../MessageList';
-
-const getLocalStorage = () => {
-	return JSON.parse(localStorage.getItem('userData'));
-};
 
 const useStyles = makeStyles((theme) => ({
 	chatbox: {
@@ -34,10 +34,20 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 function MessageBox(props) {
+	const { handleCloseChatbox, friend, sendMessage } = props;
+	const socket = useContext(WebSocketContext);
 	const dispatch = useDispatch();
-	const messages = useSelector((state) => state.messages.messageList);
-	const { handleCloseChatbox, friend, sendMessage, makeVideoCall } = props;
+	const classes = useStyles();
 	const [value, setValue] = useState('');
+	const [over, setOver] = useState(() => false);
+	const scrollEL = useRef(null);
+	const messages = useSelector(
+		(state) => state.messages.messageList[friend._id]
+	);
+
+	const handleInputChange = (e) => {
+		setValue(e.target.value);
+	};
 
 	const closeChatBox = () => {
 		if (handleCloseChatbox) {
@@ -48,49 +58,106 @@ function MessageBox(props) {
 	const handleSendMessage = () => {
 		if (sendMessage) {
 			const messageObject = {
-				from: getLocalStorage().userId,
 				to: friend._id,
 				message: value,
 			};
+
 			sendMessage(messageObject);
 			setValue('');
 		}
 	};
 
 	useEffect(() => {
-		const getMessage = async () => {
-			try {
-				await dispatch(getMessageByRoom(friend._id));
-			} catch (error) {}
-		};
-		getMessage();
+		if (messages.length > 0) {
+			scrollEL.current.scrollTop = scrollEL.current.scrollHeight;
+		}
 	}, [friend]);
 
-	const classes = useStyles();
-
-	const handleInputChange = (e) => {
-		setValue(e.target.value);
-	};
-
-	const openVideoCall = () => {
-		if (makeVideoCall) {
-			const videoInfo = {
-				from: getLocalStorage().userId,
-				to: friend._id,
+	const loadMessagePrev = (e) => {
+		if (e.target.scrollTop < 2 && !over) {
+			e.target.scrollTop = 2;
+			const infoObject = {
+				friend: friend._id,
+				l: messages.length,
+				st: e.target.scrollHeight,
 			};
-			makeVideoCall(videoInfo);
+			socket.emit('getMessages', infoObject);
 		}
-		// window.open(
-		// 	'http://localhost:3000/videocall',
-		// 	'_blank',
-		// 	'toolbar=yes,scrollbars=yes,resizable=no,top=30,left=110,width=1300,height=700'
-		// );
-		window.open(
-			`http://localhost:3000/videocall?from=${getLocalStorage().userId}&to=${
-				friend._id
-			}`
-		);
 	};
+
+	useEffect(() => {
+		if (messages.length < 1) {
+			const infoObject = {
+				friend: friend._id,
+				l: 0,
+			};
+			socket.emit('getMessagesFirst', infoObject);
+			socket.on('getMessagesFirstResponse', (msg) => {
+				const messageInfo = {
+					msg,
+					friend: friend._id,
+				};
+				dispatch(getMessageByFriend(messageInfo));
+				scrollEL.current.scrollTop = scrollEL.current.scrollHeight;
+			});
+		}
+
+		return () => {
+			socket.off('getMessagesFirstResponse');
+		};
+	}, [friend]);
+
+	useEffect(() => {
+		socket.on('getMessagesResponse', (msg, st) => {
+			if (msg.length > 0) {
+				const messageInfo = {
+					msg,
+					friend: friend._id,
+				};
+				dispatch(getMessageByFriend(messageInfo));
+				scrollEL.current.scrollTop = scrollEL.current.scrollHeight - st;
+			} else {
+				setOver(true);
+			}
+		});
+
+		return () => {
+			socket.off('getMessagesResponse');
+		};
+	}, [friend]);
+
+	useEffect(() => {
+		socket.on('privateMessageResponse', (msg) => {
+			if (messages.length > 0) {
+				const messageInfo = {
+					msg,
+					friend: msg.from._id,
+				};
+				dispatch(addNewMessage(messageInfo));
+
+				scrollEL.current.scrollTop = scrollEL.current.scrollHeight;
+			}
+		});
+
+		return () => {
+			socket.off('privateMessageResponse');
+		};
+	}, [messages, friend]);
+
+	useEffect(() => {
+		socket.on('privateMessageResponseA', (msg) => {
+			const messageInfo = {
+				msg,
+				friend: friend._id,
+			};
+			dispatch(addNewMessage(messageInfo));
+			scrollEL.current.scrollTop = scrollEL.current.scrollHeight;
+		});
+
+		return () => {
+			socket.off('privateMessageResponseA');
+		};
+	}, [friend]);
 
 	return (
 		<Paper className={classes.chatbox}>
@@ -111,7 +178,7 @@ function MessageBox(props) {
 							</Grid>
 						</Grid>
 						<Grid item xs={2} md={2} lg={2} container justify='flex-end'>
-							<IconButton onClick={openVideoCall}>
+							<IconButton>
 								<VideocamIcon color='primary' />
 							</IconButton>
 						</Grid>
@@ -126,6 +193,8 @@ function MessageBox(props) {
 					</Grid>
 				</Grid>
 				<Grid
+					onScroll={(e) => loadMessagePrev(e)}
+					ref={scrollEL}
 					item
 					style={{
 						height: '76%',
