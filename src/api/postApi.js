@@ -1,4 +1,5 @@
 import axiosClient from './axiosClient';
+import axios from 'axios';
 
 const postApi = {
 	getAllPost: () => {
@@ -28,6 +29,11 @@ const postApi = {
 	deletePost: (postId) => {
 		const url = `/post/${postId}`;
 		return axiosClient.delete(url);
+	},
+
+	likePost: (postId) => {
+		const url = `/post/${postId}`;
+		return axiosClient.post(url);
 	},
 };
 

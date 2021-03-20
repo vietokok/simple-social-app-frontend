@@ -49,11 +49,7 @@ export default function Homepage() {
 	const handleCreatePost = (data) => {
 		const createData = async () => {
 			try {
-				await dispatch(
-					createPost({
-						content: data,
-					})
-				);
+				await dispatch(createPost(data));
 			} catch (error) {}
 		};
 		createData();

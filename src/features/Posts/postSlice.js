@@ -26,6 +26,7 @@ export const getPostByFriendId = createAsyncThunk(
 export const createPost = createAsyncThunk(
 	'/post/createPost',
 	async (params) => {
+		console.log(params);
 		const response = await postApi.createPost(params);
 		return response.post;
 	}
@@ -46,6 +47,11 @@ export const deletePost = createAsyncThunk(
 		return response.message;
 	}
 );
+
+export const likePost = createAsyncThunk('/post/likePost', async (params) => {
+	const response = await postApi.deletePost(params);
+	return response;
+});
 
 const postSlice = createSlice({
 	name: 'posts',
@@ -111,6 +117,17 @@ const postSlice = createSlice({
 			);
 			state.me.splice(indexMe, 1);
 			state.postList.splice(indexPostList, 1);
+		},
+		[likePost.fulfilled]: (state, action) => {
+			// fix
+			const indexMe = state.postList.findIndex(
+				(post) => post._id === action.payload.post._id
+			);
+			const indexPostList = state.postList.findIndex(
+				(post) => post._id === action.payload._id
+			);
+			state.me.splice(indexMe, 1, action.payload);
+			state.postList.splice(indexPostList, 1, action.payload);
 		},
 	},
 });

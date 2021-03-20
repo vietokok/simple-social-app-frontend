@@ -3,6 +3,7 @@ import {
 	Box,
 	CircularProgress,
 	Grid,
+	IconButton,
 	makeStyles,
 	Paper,
 	Typography,
@@ -10,6 +11,9 @@ import {
 import React from 'react';
 import { getCookie } from 'utils';
 import MoreActionMenu from '../MoreActionMenu';
+import FavoriteBorderIcon from '@material-ui/icons/FavoriteBorder';
+import FavoriteIcon from '@material-ui/icons/Favorite';
+import ChatBubbleOutlineIcon from '@material-ui/icons/ChatBubbleOutline';
 
 const useStyles = makeStyles((theme) => ({
 	paper: {
@@ -56,6 +60,35 @@ function PostList(props) {
 						)}
 						<Grid item xs={12} md={12} lg={12}>
 							<Box>{post.content}</Box>
+						</Grid>
+						{post.image.path !== '' && (
+							<Grid item xs={12} md={12} lg={12}>
+								<img
+									src={post.image.path}
+									alt='eee'
+									style={{ width: '100%', height: 'auto' }}
+								/>
+							</Grid>
+						)}
+						<Grid item xs={12} md={12} lg={12}>
+							<Grid container alignItems='center'>
+								<Grid item xs={1} lg={1} md={1}>
+									<IconButton>
+										<FavoriteIcon color='error' />
+									</IconButton>
+								</Grid>
+								<Grid item xs={1} lg={1} md={1}>
+									<Typography variant='subtitle1'>1.2k</Typography>
+								</Grid>
+								<Grid item xs={1} lg={1} md={1}>
+									<IconButton>
+										<ChatBubbleOutlineIcon />
+									</IconButton>
+								</Grid>
+								<Grid item xs={1} lg={1} md={1}>
+									<Typography variant='subtitle1'>5</Typography>
+								</Grid>
+							</Grid>
 						</Grid>
 					</Grid>
 				</Paper>
