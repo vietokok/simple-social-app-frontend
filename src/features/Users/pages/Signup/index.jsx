@@ -40,7 +40,7 @@ const useStyles = makeStyles((theme) => ({
 		backgroundColor: theme.palette.secondary.main,
 	},
 	form: {
-		width: '100%', // Fix IE 11 issue.
+		width: '100%',
 		marginTop: theme.spacing(3),
 	},
 	submit: {
@@ -97,7 +97,7 @@ export default function SignUp() {
 				const signup = async () => {
 					try {
 						const response = await axios.post(
-							'http://localhost:4000/auth/register',
+							`${process.env.REACT_APP_API_URL}/auth/register`,
 							values
 						);
 						if (response.status === 201) {

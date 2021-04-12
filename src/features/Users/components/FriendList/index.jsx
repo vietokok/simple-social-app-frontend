@@ -7,12 +7,14 @@ import {
 	Typography,
 } from '@material-ui/core';
 import Badge from '@material-ui/core/Badge';
+import red from '@material-ui/core/colors/red';
 import { makeStyles, withStyles } from '@material-ui/core/styles';
 import MessageBox from 'features/Messages/components/MessageBox';
-import { addNewBoxChat, addNewMessage } from 'features/Messages/messageSlice';
+import { addNewBoxChat } from 'features/Messages/messageSlice';
 import { getAllUser } from 'features/Users/userSlice';
 import React, { useContext, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { getCookie } from 'utils';
 import { WebSocketContext } from 'utils/socketConfig';
 
 const StyledBadge = withStyles((theme) => ({
@@ -40,14 +42,35 @@ const useStyles = makeStyles((theme) => ({
 		overflow: 'auto',
 		flexDirection: 'column',
 	},
+	red: {
+		color: theme.palette.getContrastText(red[500]),
+		backgroundColor: red[500],
+		width: '1.5rem',
+		height: '1.5rem',
+		fontSize: '1rem',
+	},
+	small: {
+		width: theme.spacing(3),
+		height: theme.spacing(3),
+	},
+	friendTitle: {
+		fontSize: '1.25rem',
+		fontWeight: 'bold',
+	},
+	friendNotFound: {
+		textAlign: 'center',
+	},
 }));
 
 function FriendList(props) {
+	const userId = getCookie('c_user');
 	const socket = useContext(WebSocketContext);
 	const dispatch = useDispatch();
 	const friends = useSelector((state) => state.users.friendList);
-	const messages = useSelector((state) => state.messages.messageList);
 
+	const [isReadList, SetIsReadList] = useState({});
+
+	// get all friends
 	useEffect(() => {
 		const getFriends = async () => {
 			try {
@@ -57,20 +80,21 @@ function FriendList(props) {
 		getFriends();
 	}, []);
 
-	// useEffect(() => {
-	// 	const myInterVal = setInterval(() => {
-	// 		const getFriends = async () => {
-	// 			try {
-	// 				await dispatch(getAllUser());
-	// 			} catch (error) {}
-	// 		};
-	// 		getFriends();
-	// 	}, 20000);
+	// check friend online after 20 seconds
+	useEffect(() => {
+		const myInterVal = setInterval(() => {
+			const getFriends = async () => {
+				try {
+					await dispatch(getAllUser());
+				} catch (error) {}
+			};
+			getFriends();
+		}, 20000);
 
-	// 	return () => {
-	// 		clearInterval(myInterVal);
-	// 	};
-	// }, []);
+		return () => {
+			clearInterval(myInterVal);
+		};
+	}, []);
 
 	const [openChatbox, setOpenChatbox] = useState({
 		open: false,
@@ -78,6 +102,10 @@ function FriendList(props) {
 	});
 
 	const handleOpenChatbox = (friend) => {
+		SetIsReadList({
+			...isReadList,
+			[friend._id]: 0,
+		});
 		dispatch(addNewBoxChat(friend._id));
 		setOpenChatbox({ ...openChatbox, open: true, friend });
 	};
@@ -91,6 +119,11 @@ function FriendList(props) {
 			if (openChatbox.open !== true) {
 				handleOpenChatbox(msg.from);
 			}
+		});
+
+		socket.emit('getIsRead', userId);
+		socket.on('getIsReadResponse', (objectIsRead) => {
+			SetIsReadList(objectIsRead);
 		});
 	}, []);
 
@@ -114,9 +147,7 @@ function FriendList(props) {
 			<Paper className={classes.paper}>
 				<Grid container spacing={2} direction='column'>
 					<Grid item>
-						<Box style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
-							Friends
-						</Box>
+						<Box className='friend-title'>Friends</Box>
 					</Grid>
 					{friends.loading ? (
 						<Grid container justify='center' item xs={12} md={12} lg={12}>
@@ -147,13 +178,27 @@ function FriendList(props) {
 										<Avatar>V</Avatar>
 									)}
 								</Grid>
-								<Grid item xs={10} md={10} lg={10}>
+								<Grid item xs={8} md={8} lg={8}>
 									<Box>{friend.displayName}</Box>
 								</Grid>
+								{isReadList.hasOwnProperty(friend._id) &&
+									isReadList[friend._id] !== 0 && (
+										<Grid item xs={2} md={2} lg={2} container justify='center'>
+											<Avatar className={classes.red}>
+												{isReadList[friend._id]}
+											</Avatar>
+										</Grid>
+									)}
 							</Grid>
 						))
 					) : (
-						<Grid item xs={12} md={12} lg={12} style={{ textAlign: 'center' }}>
+						<Grid
+							item
+							xs={12}
+							md={12}
+							lg={12}
+							className={classes.friendNotFound}
+						>
 							<Typography variant='h6'>No friend found</Typography>
 						</Grid>
 					)}

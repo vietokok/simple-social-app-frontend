@@ -1,8 +1,7 @@
 import { Box, CircularProgress } from '@material-ui/core';
-import { green } from '@material-ui/core/colors';
+import { red } from '@material-ui/core/colors';
 import { createMuiTheme, ThemeProvider } from '@material-ui/core/styles';
 import Homepage from 'features/Users/pages/HomePage';
-import Profile from 'features/Users/pages/Profile';
 import SignUp from 'features/Users/pages/Signup';
 import 'fontsource-roboto';
 import { Suspense, useState } from 'react';
@@ -17,7 +16,7 @@ function App() {
 
 	const theme = createMuiTheme({
 		palette: {
-			secondary: green,
+			secondary: red,
 			type: darkMode ? 'dark' : 'light',
 		},
 	});
@@ -29,7 +28,6 @@ function App() {
 					<BrowserRouter>
 						<Switch>
 							<PrivateRoute component={Homepage} path='/' exact />
-							<PrivateRoute component={Profile} path='/profile' exact />
 							<PublicRoute
 								restricted={true}
 								component={SignIn}

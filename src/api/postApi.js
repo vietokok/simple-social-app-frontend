@@ -1,18 +1,8 @@
 import axiosClient from './axiosClient';
-import axios from 'axios';
 
 const postApi = {
-	getAllPost: () => {
-		const url = '/post/all';
-		return axiosClient.get(url);
-	},
-	getPostByMe: () => {
-		const url = '/post/user';
-		return axiosClient.get(url);
-	},
-
-	getPostByFriendId: (friendId) => {
-		const url = `/post/${friendId}`;
+	getPosts: () => {
+		const url = `/post/all`;
 		return axiosClient.get(url);
 	},
 
@@ -32,8 +22,12 @@ const postApi = {
 	},
 
 	likePost: (postId) => {
-		const url = `/post/${postId}`;
+		const url = `/post/${postId}/like`;
 		return axiosClient.post(url);
+	},
+	commentPost: (postId, data) => {
+		const url = `/post/${postId}/comment`;
+		return axiosClient.post(url, data);
 	},
 };
 

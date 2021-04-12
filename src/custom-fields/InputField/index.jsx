@@ -10,7 +10,6 @@ function InputField(props) {
 	const { name } = field;
 	const { errors, touched } = form;
 	const showError = errors[name] && touched[name];
-	// inputProps={{ maxLength: 100 }}
 
 	return (
 		<FormControl fullWidth error={showError}>

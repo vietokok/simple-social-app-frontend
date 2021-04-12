@@ -9,9 +9,11 @@ import MyAppBar from 'components/MyAppBar';
 import CreatePostModal from 'features/Posts/components/CreatePostModal';
 import PostList from 'features/Posts/components/PostList';
 import {
+	commentPost,
 	createPost,
 	deletePost,
 	getAllPost,
+	likePost,
 	updatePost,
 } from 'features/Posts/postSlice';
 import FriendList from 'features/Users/components/FriendList';
@@ -38,6 +40,10 @@ const useStyles = makeStyles((theme) => ({
 		display: 'flex',
 		overflow: 'auto',
 		flexDirection: 'column',
+	},
+	postTitle: {
+		fontSize: '1.25rem',
+		fontWeight: 'bold',
 	},
 }));
 
@@ -73,6 +79,24 @@ export default function Homepage() {
 		deleteData();
 	};
 
+	const handleLikePost = (id) => {
+		const like = async () => {
+			try {
+				await dispatch(likePost(id));
+			} catch (error) {}
+		};
+		like();
+	};
+
+	const handleCommentPost = (data) => {
+		const comment = async () => {
+			try {
+				await dispatch(commentPost(data));
+			} catch (error) {}
+		};
+		comment();
+	};
+
 	useEffect(() => {
 		const getMe = async () => {
 			try {
@@ -105,14 +129,14 @@ export default function Homepage() {
 					<Container maxWidth='lg' className={classes.container}>
 						<Grid container spacing={2}>
 							{/* left panel */}
-							<Grid item xs={12} md={4} lg={4}>
+							<Grid item xs={4} md={4} lg={4}>
 								<Grid container direction='column' spacing={2}>
 									{/* friend list */}
 									<FriendList />
 								</Grid>
 							</Grid>
 							{/* right panel */}
-							<Grid item xs={12} md={8} lg={8}>
+							<Grid item xs={8} md={8} lg={8}>
 								<Paper className={classes.paper}>
 									<Grid container spacing={3}>
 										{/* avatar */}
@@ -128,9 +152,7 @@ export default function Homepage() {
 										</Grid>
 										<Grid item xs={3} md={3} lg={3}></Grid>
 										<Grid item xs={12} md={12} lg={12}>
-											<Box style={{ fontSize: '1.25rem', fontWeight: 'bold' }}>
-												Posts
-											</Box>
+											<Box className={classes.postTitle}>Posts</Box>
 										</Grid>
 										{/* post list */}
 										<PostList
@@ -138,6 +160,8 @@ export default function Homepage() {
 											postLoading={posts.loading}
 											handleEditPost={handleEditPost}
 											handleDeletePost={handleDeletePost}
+											handleLikePost={handleLikePost}
+											handleCommentPost={handleCommentPost}
 										/>
 									</Grid>
 								</Paper>

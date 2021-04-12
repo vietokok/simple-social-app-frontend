@@ -1,6 +1,5 @@
 import React, { createContext } from 'react';
 import io from 'socket.io-client';
-import { getCookie } from 'utils';
 
 const WebSocketContext = createContext(null);
 
@@ -10,7 +9,7 @@ let socket;
 
 export default ({ children }) => {
 	if (!socket) {
-		socket = io('http://localhost:4000', {
+		socket = io(`${process.env.REACT_APP_API_URL}`, {
 			withCredentials: true,
 		});
 	}

@@ -22,14 +22,22 @@ import { WebSocketContext } from 'utils/socketConfig';
 import MessageList from '../MessageList';
 
 const useStyles = makeStyles((theme) => ({
-	chatbox: {
+	root: {
 		position: 'fixed',
-		zIndex: 10000000,
+		zIndex: '10000000000000',
 		width: 328,
 		height: 455,
 		bottom: 0,
 		padding: theme.spacing(1, 0, 1, 1),
 		right: '7%',
+	},
+	chatBox: {
+		height: '100%',
+	},
+	messageList: {
+		height: '76%',
+		width: '100%',
+		overflowY: 'scroll',
 	},
 }));
 
@@ -38,9 +46,12 @@ function MessageBox(props) {
 	const socket = useContext(WebSocketContext);
 	const dispatch = useDispatch();
 	const classes = useStyles();
+
 	const [value, setValue] = useState('');
 	const [over, setOver] = useState(() => false);
+
 	const scrollEL = useRef(null);
+
 	const messages = useSelector(
 		(state) => state.messages.messageList[friend._id]
 	);
@@ -67,11 +78,19 @@ function MessageBox(props) {
 		}
 	};
 
-	useEffect(() => {
-		if (messages.length > 0) {
-			scrollEL.current.scrollTop = scrollEL.current.scrollHeight;
+	const handleEnterSendMessage = (e) => {
+		if (sendMessage) {
+			if (e.key === 'Enter' || e.keyCode === 13) {
+				const messageObject = {
+					to: friend._id,
+					message: value,
+				};
+
+				sendMessage(messageObject);
+				setValue('');
+			}
 		}
-	}, [friend]);
+	};
 
 	const loadMessagePrev = (e) => {
 		if (e.target.scrollTop < 2 && !over) {
@@ -84,6 +103,12 @@ function MessageBox(props) {
 			socket.emit('getMessages', infoObject);
 		}
 	};
+
+	useEffect(() => {
+		if (messages.length > 0) {
+			scrollEL.current.scrollTop = scrollEL.current.scrollHeight;
+		}
+	}, [friend]);
 
 	useEffect(() => {
 		if (messages.length < 1) {
@@ -160,8 +185,8 @@ function MessageBox(props) {
 	}, [friend]);
 
 	return (
-		<Paper className={classes.chatbox}>
-			<Grid style={{ height: '100%' }} container direction='column'>
+		<Paper className={classes.root}>
+			<Grid className={classes.chatBox} container direction='column'>
 				<Grid item>
 					<Grid container spacing={1} alignItems='center'>
 						<Grid item xs={2} md={2} lg={2}>
@@ -196,11 +221,7 @@ function MessageBox(props) {
 					onScroll={(e) => loadMessagePrev(e)}
 					ref={scrollEL}
 					item
-					style={{
-						height: '76%',
-						width: '100%',
-						overflowY: 'scroll',
-					}}
+					className={classes.messageList}
 				>
 					<Grid container>
 						{messages.length > 0 && <MessageList messages={messages} />}
@@ -208,13 +229,9 @@ function MessageBox(props) {
 				</Grid>
 				<Grid item>
 					<Grid container alignItems='center'>
-						<Grid item xs={1} md={1} lg={1}>
-							<IconButton style={{ padding: '12px 2px' }}>
-								<ImageIcon color='primary' />
-							</IconButton>
-						</Grid>
-						<Grid item xs={9} md={9} lg={9} container justify='flex-end'>
+						<Grid item xs={10} md={10} lg={10} container justify='flex-end'>
 							<TextField
+								onKeyUp={handleEnterSendMessage}
 								value={value}
 								onChange={handleInputChange}
 								style={{ width: '95%' }}

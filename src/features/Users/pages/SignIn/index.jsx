@@ -28,11 +28,17 @@ const useStyles = makeStyles((theme) => ({
 		backgroundColor: theme.palette.secondary.main,
 	},
 	form: {
-		width: '100%', // Fix IE 11 issue.
+		width: '100%',
 		marginTop: theme.spacing(1),
 	},
 	submit: {
 		margin: theme.spacing(3, 0, 2),
+	},
+	socialPanel: {
+		marginTop: '1rem',
+	},
+	socialPanelButon: {
+		marginTop: '0.5rem',
 	},
 }));
 
@@ -66,11 +72,11 @@ export default function SignIn() {
 	};
 
 	const openGoogleLogin = () => {
-		window.open('http://localhost:4000/auth/google', '_self');
+		window.open(`${process.env.REACT_APP_API_URL}/auth/google`, '_self');
 	};
 
 	const openFacebookLogin = () => {
-		window.open('http://localhost:4000/auth/facebook', '_self');
+		window.open(`${process.env.REACT_APP_API_URL}/auth/facebook`, '_self');
 	};
 
 	const initialValues = {
@@ -91,7 +97,7 @@ export default function SignIn() {
 				const login = async () => {
 					try {
 						const response = await axios.post(
-							'http://localhost:4000/auth/login',
+							`${process.env.REACT_APP_API_URL}/auth/login`,
 							values,
 							{
 								withCredentials: true,
@@ -133,7 +139,7 @@ export default function SignIn() {
 									name='email'
 									component={InputField}
 									label='Email Address'
-									autoFocus={true}
+									autoFocus={false}
 									fullWidth={true}
 									require={true}
 								/>
@@ -169,11 +175,16 @@ export default function SignIn() {
 								</Grid>
 							</Form>
 						</Box>
-						<Grid style={{ marginTop: '1rem' }} container>
+						<Grid className={classes.socialPanel} container>
 							<Grid item container justify='center'>
 								<Typography variant='h6'>OR</Typography>
 							</Grid>
-							<Grid style={{ marginTop: '0.5rem' }} item container spacing={3}>
+							<Grid
+								className={classes.socialPanelButon}
+								item
+								container
+								spacing={3}
+							>
 								<Grid item xs={6} md={6} lg={6}>
 									<Button
 										onClick={openFacebookLogin}

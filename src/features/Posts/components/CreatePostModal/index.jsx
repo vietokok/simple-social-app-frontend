@@ -11,10 +11,10 @@ import {
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import ImageIcon from '@material-ui/icons/Image';
-import axios from 'axios';
 import InputField from 'custom-fields/InputField';
 import { FastField, Form, Formik } from 'formik';
-import React, { useRef, useState } from 'react';
+import React, { useContext, useRef, useState } from 'react';
+import { WebSocketContext } from 'utils/socketConfig';
 import * as Yup from 'yup';
 
 const useStyles = makeStyles((theme) => ({
@@ -27,11 +27,38 @@ const useStyles = makeStyles((theme) => ({
 		width: 500,
 		outline: 0,
 	},
+	createButton: {
+		borderRadius: '20px',
+	},
+	createPostTitle: {
+		marginLeft: '57px',
+		fontSize: '1.25rem',
+		fontWeight: 'bold',
+	},
+	userName: {
+		marginLeft: '10px',
+	},
+	browserImageButton: {
+		cursor: 'pointer',
+	},
+	image: {
+		width: '100%',
+		height: 'auto',
+	},
+	closeImageButton: {
+		position: 'absolute',
+		top: '10px',
+		right: '10px',
+		backgroundColor: '#fff',
+	},
+	postPanel: {
+		marginTop: '1rem',
+	},
 }));
 
 function CreatePostModal(props) {
 	const { userData, handleCreatePost } = props;
-
+	const socket = useContext(WebSocketContext);
 	const classes = useStyles();
 
 	const [open, setOpen] = React.useState(false);
@@ -93,6 +120,10 @@ function CreatePostModal(props) {
 					handleRemoveImageUpload();
 				}
 
+				const notiObject = {
+					type: 'create',
+				};
+				socket.emit('notification', notiObject);
 				handleClose();
 			}}
 		>
@@ -101,9 +132,7 @@ function CreatePostModal(props) {
 					<Box>
 						<Button
 							variant='contained'
-							style={{
-								borderRadius: '20px',
-							}}
+							className={classes.createButton}
 							size='large'
 							fullWidth
 							disableFocusRipple
@@ -126,13 +155,7 @@ function CreatePostModal(props) {
 												container
 												justify='center'
 											>
-												<Box
-													style={{
-														marginLeft: '57px',
-														fontSize: '1.25rem',
-														fontWeight: 'bold',
-													}}
-												>
+												<Box className={classes.createPostTitle}>
 													Create Post
 												</Box>
 											</Grid>
@@ -156,7 +179,7 @@ function CreatePostModal(props) {
 												<Avatar>V</Avatar>
 											</Grid>
 											<Grid item xs={9} md={9} lg={9}>
-												<Box style={{ marginLeft: '10px' }}>
+												<Box className={classes.userName}>
 													{userData.displayName}
 												</Box>
 											</Grid>
@@ -168,7 +191,10 @@ function CreatePostModal(props) {
 												container
 												justify='flex-end'
 											>
-												<label style={{ cursor: 'pointer' }} htmlFor='image'>
+												<label
+													className={classes.browserImageButton}
+													htmlFor='image'
+												>
 													<ImageIcon color='primary' fontSize='large' />
 												</label>
 												<input
@@ -206,10 +232,7 @@ function CreatePostModal(props) {
 													}}
 												>
 													<img
-														style={{
-															width: '100%',
-															height: 'auto',
-														}}
+														className={classes.image}
 														src={image}
 														alt='aaa'
 													/>
@@ -220,12 +243,7 @@ function CreatePostModal(props) {
 															setImage('');
 														}}
 														size='small'
-														style={{
-															position: 'absolute',
-															top: '10px',
-															right: '10px',
-															backgroundColor: '#fff',
-														}}
+														className={classes.closeImageButton}
 													>
 														<CloseIcon />
 													</IconButton>
@@ -236,7 +254,7 @@ function CreatePostModal(props) {
 												xs={12}
 												md={12}
 												lg={12}
-												style={{ marginTop: '1rem' }}
+												className={classes.postPanel}
 											>
 												<Box>
 													<Button

@@ -1,9 +1,8 @@
-import React from 'react';
 import ImageIcon from '@material-ui/icons/Image';
+import React from 'react';
 
 function ImageField(props) {
 	const { field } = props;
-
 	const { name } = field;
 
 	const imageREF = useRef(null);

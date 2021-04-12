@@ -35,11 +35,19 @@ const useStyles = makeStyles((theme) => ({
 		width: 500,
 		outline: 0,
 	},
+	editPostTitle: {
+		marginLeft: '57px',
+		fontSize: '1.25rem',
+		fontWeight: 'bold',
+	},
+	userName: {
+		marginLeft: '10px',
+	},
 }));
 
 function MoreActionMenu(props) {
 	const classes = useStyles();
-	const { postContent, postId, handleDeletePost, handleEditPost } = props;
+	const { postContent, postId, handleDeletePost, handleEditPost, user } = props;
 
 	const [inputValue, setInputValue] = useState(() => {
 		return postContent;
@@ -129,15 +137,7 @@ function MoreActionMenu(props) {
 											container
 											justify='center'
 										>
-											<Box
-												style={{
-													marginLeft: '57px',
-													fontSize: '1.25rem',
-													fontWeight: 'bold',
-												}}
-											>
-												Edit Post
-											</Box>
+											<Box className={classes.editPostTitle}>Edit Post</Box>
 										</Grid>
 										<Grid
 											item
@@ -158,13 +158,13 @@ function MoreActionMenu(props) {
 											<Avatar>V</Avatar>
 										</Grid>
 										<Grid item xs={11} md={11} lg={11}>
-											<Box style={{ marginLeft: '10px' }}>Khắc Việt</Box>
+											<Box className={classes.userName}>{user}</Box>
 										</Grid>
 										<Grid item xs={12} md={12} lg={12}>
 											<TextField
 												value={inputValue}
 												onChange={handleChange}
-												label={"What's on your mind, Việt?"}
+												label={`What's on your mind, ${user}?`}
 												variant='outlined'
 												rows={6}
 												multiline

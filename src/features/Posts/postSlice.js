@@ -3,30 +3,16 @@ import postApi from 'api/postApi';
 
 export const getAllPost = createAsyncThunk('/post/getAllPost', async () => {
 	try {
-		const response = await postApi.getAllPost();
+		const response = await postApi.getPosts();
 		return response.posts;
 	} catch (error) {
 		console.log(error);
 	}
 });
 
-export const getPostByMe = createAsyncThunk('/post/getPostByMe', async () => {
-	const response = await postApi.getPostByMe();
-	return response.posts;
-});
-
-export const getPostByFriendId = createAsyncThunk(
-	'/post/getPostByFriendId',
-	async (params) => {
-		const response = await postApi.getPostByFriendId(params);
-		return response.posts;
-	}
-);
-
 export const createPost = createAsyncThunk(
 	'/post/createPost',
 	async (params) => {
-		console.log(params);
 		const response = await postApi.createPost(params);
 		return response.post;
 	}
@@ -49,16 +35,23 @@ export const deletePost = createAsyncThunk(
 );
 
 export const likePost = createAsyncThunk('/post/likePost', async (params) => {
-	const response = await postApi.deletePost(params);
-	return response;
+	const response = await postApi.likePost(params);
+	return response.info;
 });
+
+export const commentPost = createAsyncThunk(
+	'/post/commentPost',
+	async (params) => {
+		const response = await postApi.commentPost(params.id, params.data);
+		return response.post;
+	}
+);
 
 const postSlice = createSlice({
 	name: 'posts',
 	initialState: {
 		postList: [],
-		me: [],
-		friend: [],
+		postDetail: {},
 		loading: false,
 		error: '',
 	},
@@ -74,60 +67,47 @@ const postSlice = createSlice({
 			state.loading = false;
 			state.postList = action.payload;
 		},
-		[getPostByMe.pending]: (state) => {
-			state.loading = true;
-		},
-		[getPostByMe.rejected]: (state, action) => {
-			state.error = action.error;
-		},
-		[getPostByMe.fulfilled]: (state, action) => {
-			state.loading = false;
-			state.me = action.payload;
-		},
-		[getPostByFriendId.pending]: (state) => {
-			state.loading = true;
-		},
-		[getPostByFriendId.rejected]: (state, action) => {
-			state.error = action.error;
-		},
-		[getPostByFriendId.fulfilled]: (state, action) => {
-			state.loading = false;
-			state.friend = action.payload;
-		},
+
 		[createPost.fulfilled]: (state, action) => {
 			state.postList.unshift(action.payload);
-			state.me.unshift(action.payload);
 		},
+
 		[updatePost.fulfilled]: (state, action) => {
-			const indexMe = state.me.findIndex(
+			const index = state.postList.findIndex(
 				(post) => post._id === action.payload._id
 			);
-			const indexPostList = state.postList.findIndex(
-				(post) => post._id === action.payload._id
-			);
-			state.me.splice(indexMe, 1, action.payload);
-			state.postList.splice(indexPostList, 1, action.payload);
+
+			state.postList.splice(index, 1, action.payload);
 		},
+
 		[deletePost.fulfilled]: (state, action) => {
-			const indexMe = state.me.findIndex(
+			const index = state.postList.findIndex(
 				(post) => post._id === action.payload.id
 			);
-			const indexPostList = state.postList.findIndex(
-				(post) => post._id === action.payload.id
-			);
-			state.me.splice(indexMe, 1);
-			state.postList.splice(indexPostList, 1);
+
+			state.postList.splice(index, 1);
 		},
+
 		[likePost.fulfilled]: (state, action) => {
-			// fix
-			const indexMe = state.postList.findIndex(
-				(post) => post._id === action.payload.post._id
+			const index = state.postList.findIndex(
+				(post) => post._id === action.payload.postId
 			);
-			const indexPostList = state.postList.findIndex(
+
+			if (action.payload.action === 'like') {
+				state.postList[index].like.push(action.payload.userId);
+			} else {
+				const indexItem = state.postList[index].like.findIndex(
+					(item) => item === action.payload.userId
+				);
+				state.postList[index].like.splice(indexItem, 1);
+			}
+		},
+		[commentPost.fulfilled]: (state, action) => {
+			const index = state.postList.findIndex(
 				(post) => post._id === action.payload._id
 			);
-			state.me.splice(indexMe, 1, action.payload);
-			state.postList.splice(indexPostList, 1, action.payload);
+
+			state.postList.splice(index, 1, action.payload);
 		},
 	},
 });
